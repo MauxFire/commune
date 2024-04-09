@@ -3114,7 +3114,17 @@ class c:
              **kwargs):
 
         kill_fn = getattr(cls, f'{mode}_kill')
+<<<<<<< HEAD
         delete_modules = []
+=======
+        delete_modules = {}
+        for module in modules:
+            killed_module = kill_fn(module, verbose=verbose, **kwargs)
+            delete_modules[module] = killed_module
+        # update modules
+        cls.update(network='local')
+        return {'killed': delete_modules}
+>>>>>>> 29cc53fdac4d56d47e1230a45fd7d0492407b115
 
         try:
             killed_module =kill_fn(module, verbose=verbose,prefix_match=prefix_match, **kwargs)
@@ -4194,6 +4204,37 @@ class c:
         logger = cls.resolve_logger()
         return logger.warning(*args, **kwargs)
     
+<<<<<<< HEAD
+=======
+
+    helper_functions = ['getattr', 'functions', 'namespace', 'server_info', 
+                'info', 'ip', 'address','ip_address', 'info', 'schema',
+                'module_name', 'modules', 'help']
+    @property
+    def whitelist(self) -> List[str]:
+        if hasattr(self, 'config') and isinstance(self.config, dict):
+            if 'whitelist' in self.config:
+                return self.config['whitelist']
+            
+        if self.is_root():
+            return self.helper_functions
+        else:
+            return self.fns(include_module=False) + self.attributes() + self.helper_functions
+    @property
+    def blacklist(self) -> List[str]:
+        if hasattr(self, 'config') and isinstance(self.config, dict):
+            if 'blacklist' in self.config:
+                return self.config['blacklist']
+        return []
+ 
+
+
+    @classmethod
+    def from_json(cls, json_str:str) -> 'Module':
+        import json
+        return cls.from_dict(json.loads(json_str))
+    
+>>>>>>> 29cc53fdac4d56d47e1230a45fd7d0492407b115
     
      
     @classmethod
