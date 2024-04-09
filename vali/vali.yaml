@@ -10,6 +10,7 @@ search: null
 max_age: 3600
 vote: True
 fn : null
+storage_path: null # the path to store paths
 
 # score
 alpha: 0.0

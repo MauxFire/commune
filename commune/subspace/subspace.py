@@ -3357,23 +3357,25 @@ class Subspace(c.Module):
         return self.check_servers(search='vali', **kwargs)
     
     
-    def check_servers(self, search='vali',update:bool=False, netuid=0, min_lag=100, remote=False, **kwargs):
+    def check_servers(self, search='vali',update:bool=False, netuid=0, max_staleness=100, remote=False, **kwargs):
         if remote:
             kwargs = c.locals2kwargs(locals())
             return self.remote_fn('check_servers', kwargs=kwargs)
-        features = ['name', 'serving', 'address', 'last_update', 'stake', 'dividends']
-        module_stats = self.stats(search=search, netuid=netuid, features=features, df=False, update=update)
+            
+        module_stats = self.stats(search=search, netuid=netuid,  df=False, update=update)
         module2stats = {m['name']:m for m in module_stats}
         block = self.block
         response_batch = {}
         c.print(f"Checking {len(module2stats)} {search} servers")
         for module, stats in module2stats.items():
             # check if the module is serving
-            lag = block - stats['last_update']
-            if not c.server_exists(module) or lag > min_lag:
+            vote_staleness = stats['vote_staleness'] 
+            if vote_staleness > max_staleness:
+                c.print(f"{module} is not serving with a lag of {vote_staleness}> {max_staleness} blocks")
                 response  = c.serve(module)
             else:
-                response = f"{module} is already serving or has a lag of {lag} blocks but less than {min_lag} blocks"
+                response = f"{module} is already serving or has a lag of {vote_staleness} blocks but less than {max_staleness} blocks"
+            c.print(response)
             response_batch[module] = response
 
         return response_batch

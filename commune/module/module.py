@@ -1013,7 +1013,7 @@ class c:
     
     @classmethod
     def modules(cls, search=None, mode='local', tree='commune', **kwargs)-> List[str]:
-        if any([str(k) in ['subspace', 's'] for k in [mode, search]]):
+        if any([str(k) in ['subspace', 's'] for k in [mode]]):
             module_list = c.module('subspace')().modules(search=search, **kwargs)
         else:
             module_list = list(c.tree(search=search, tree=tree, **kwargs).keys())
@@ -1046,7 +1046,6 @@ class c:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             # Set the socket timeout
             sock.settimeout(timeout)
-
             # Try to connect to the specified IP and port
             try:
                 port=int(port)
@@ -1276,6 +1275,7 @@ class c:
                 used_ports += [port]
                 
         return used_ports
+
     
     @classmethod
     def free_address(cls, **kwargs):
@@ -3748,13 +3748,14 @@ class c:
         return c.module('network').external_ip(*args, **kwargs)
     
     @classmethod
-    def ip(cls,  max_age=100, update:bool = False, **kwargs) -> str:
+    def ip(cls,  max_age=100, update:bool = False, verbose=False, **kwargs) -> str:
         t1 = c.time()
         ip = c.get('ip', None, max_age=max_age, update=update)
         if ip == None:
             ip =  cls.external_ip(**kwargs)
             c.put('ip', ip)
-            
+        t2 = c.time()
+        c.print(f'ip took {t2-t1} seconds', verbose=verbose)
         return ip
     
     @classmethod

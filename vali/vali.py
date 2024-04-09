@@ -352,9 +352,11 @@ class Vali(c.Module):
         else:
             info = module.info(timeout=self.config.timeout)
 
-        c.print(f'🚀 :: Eval Module {info["name"]} :: 🚀',  color='yellow', verbose=verbose)
 
         assert 'address' in info and 'name' in info, f'Info must have a address key, got {info.keys()}'
+
+        c.print(f'🚀 :: Eval Module {info["name"]} :: 🚀',  color='yellow', verbose=verbose)
+
         info['staleness'] = c.time() - info.get('timestamp', 0)
         info['path'] = path
 
@@ -377,8 +379,8 @@ class Vali(c.Module):
         
 
     def storage_path(self, network=None):
-        if self.config.get('path', None) != None:
-            path = self.config.path
+        if self.config.get('storage_path', None) != None:
+            path = self.config.storage_path
         else:
             network = network or self.config.network
             if 'subspace' in network:
@@ -501,11 +503,6 @@ class Vali(c.Module):
     def module_paths(self, network=None):
         paths = self.ls(self.storage_path(network=network))
         return paths
-    
-    def save_module_info(self, k:str, v:dict,):
-        path = self.storage_path() + f'/{k}'
-        self.put(path, v)
-    
 
     # def __del__(self):
     #     c.print(f'Vali {self.config.network} {self.config.netuid} stopped', color='cyan')

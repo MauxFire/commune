@@ -41,7 +41,10 @@ class Tree(c.Module):
                 search=None,
                 update = False,
                 verbose:bool = False,
-                max_age = 100, **kwargs
+                max_age = 100, 
+                sort = True,
+                **kwargs
+                
                 ) -> List[str]:
         
         tree = tree or 'commune'
@@ -73,6 +76,10 @@ class Tree(c.Module):
         # cache the module tree
         if search != None:
             module_tree = {k:v for k,v in module_tree.items() if search in k}
+
+        if sort:
+            module_tree = {k:v for k,v in sorted(module_tree.items())}
+
 
         return module_tree
     
@@ -189,10 +196,14 @@ class Tree(c.Module):
             if simple_path.startswith('modules.'):
                 simple_path = simple_path.replace('modules.', '')
 
-        for x in ['.miner']:
-            if simple_path.endswith(x):
-                simple_path = simple_path[:-len(x)]
-        
+        # cleaning
+        for x in ['miner', 'module', 'vali']:
+            if simple_path.endswith('.'+x):
+                if x not in ['vali']:
+                    simple_path = simple_path[:len('.'+x)]
+                if simple_path.startswith(x+'.'):
+                    simple_path = simple_path[len(x+'.'):]
+
         return simple_path
 
 

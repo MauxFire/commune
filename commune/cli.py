@@ -17,10 +17,8 @@ class cli(c.Module):
         self.base_module = c.module(module)
         args = args or self.argv()
         args_str = 'c ' + ' '.join(args)
-        
-        if new_event_loop:
-            c.new_event_loop(True)
-
+        if args[0].endswith('.py'):
+            return c.cmd(f'python3 {args[0]}' + ' '.join(args[1:]))
         if len(args) == 0:
             return c.schema()
         
