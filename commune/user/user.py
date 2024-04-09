@@ -94,6 +94,19 @@ class User(c.Module):
         import pandas as pd
         df = pd.DataFrame(df)
         return df 
+
+    def blacklist_user(self, address):
+        return self.add_user(address, role='blacklist')
+    
+    def whitelist_user(self, address):
+        return self.add_user(address, role='user')
+
+    def blacklist_users(self):
+        return [k for k,v in self.users().items() if v['role'] == 'blacklist']
+    
+    def whitelist_users(self):
+        return [k for k,v in self.users().items() if v['role'] == 'user']
+    
         
     @classmethod
     def app(cls):

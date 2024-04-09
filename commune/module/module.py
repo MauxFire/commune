@@ -3114,9 +3114,6 @@ class c:
              **kwargs):
 
         kill_fn = getattr(cls, f'{mode}_kill')
-<<<<<<< HEAD
-        delete_modules = []
-=======
         delete_modules = {}
         for module in modules:
             killed_module = kill_fn(module, verbose=verbose, **kwargs)
@@ -3124,7 +3121,6 @@ class c:
         # update modules
         cls.update(network='local')
         return {'killed': delete_modules}
->>>>>>> 29cc53fdac4d56d47e1230a45fd7d0492407b115
 
         try:
             killed_module =kill_fn(module, verbose=verbose,prefix_match=prefix_match, **kwargs)
@@ -4204,8 +4200,6 @@ class c:
         logger = cls.resolve_logger()
         return logger.warning(*args, **kwargs)
     
-<<<<<<< HEAD
-=======
 
     helper_functions = ['getattr', 'functions', 'namespace', 'server_info', 
                 'info', 'ip', 'address','ip_address', 'info', 'schema',
@@ -4234,7 +4228,6 @@ class c:
         import json
         return cls.from_dict(json.loads(json_str))
     
->>>>>>> 29cc53fdac4d56d47e1230a45fd7d0492407b115
     
      
     @classmethod
