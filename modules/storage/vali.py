@@ -9,27 +9,24 @@ class StorageVali(c.module('vali')):
                     search= 'storage',
                     storage_timeout= 5,
                     tag= 'base',
-                    network= 'local.0',
+                    network= 'local',
                     max_workers= 1, **kwargs
     ):
         self.init_vali(locals())
 
-    def score(self, module) -> int:
+    def score_module(self, module) -> int:
         value = c.random_int()
         key = f'test_storage/{self.key.ss58_address}'
         module.put_item(key, value)
         new_value = module.get_item(key)
-        assert value == new_value, f'{value} != {new_value}'
-        return 1
-    
-        return self.put('storage/' + key, value)
+        return int(value == new_value)
     
     def get_item(self, key: str) -> int:
         return self.get('storage/' + key)
     
     @classmethod
     def testnet(cls) -> int:
-        c.serve('storage')
+        c.fleet('storage')
         c.serve('storage.vali', remote=0, debug=1)
         return 1
 

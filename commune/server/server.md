@@ -26,14 +26,38 @@ or
 
 ```json
 {
-    "data" : "{'args': [], 'kwargs': {'a': 1}, 'timestamp': 1713911754.136804}",
+    "data" : "{'kwargs': {'a': 1}, 'timestamp': 1713911754.136804}",
     "signature" : "59rcj4fjdjiwjoijveoivjhowuhveoruvherouvhnerouohouev"
 }
 
 or 
 ```
 
+```json
+{
+    "data" : "{'args': [1], 'timestamp': 1713911754.136804}",
+    "signature" : "59rcj4fjdjiwjoijveoivjhowuhveoruvherouvhnerouohouev"
+}
+
+or 
+
+
+```json
+{
+    "data" : "{'params': [1], 'timestamp': 1713911754.136804}",
+    "signature" : "59rcj4fjdjiwjoijveoivjhowuhveoruvherouvhnerouohouev"
+}
+
+or 
+
+
+
+
 Verification
+
+
+
+
 
 
 

@@ -4,6 +4,7 @@ import os
 from copy import deepcopy
 
 class Tree(c.Module):
+    ignore_prefixes = ['commune', 'modules']
     tree_folders_path = 'module_tree_folders'
     default_tree_path = c.libpath
     default_tree = default_tree_path.split('/')[-1]
@@ -14,15 +15,24 @@ class Tree(c.Module):
 
     
     @classmethod
-    def simple2path(cls, path:str, tree=None, **kwargs) -> str:
-        tree = tree or c.pwd_tree()
-        if path not in tree:
-            shortcuts = c.shortcuts()
-            if path in shortcuts:
-                path = shortcuts[path]
-            else:
-                raise Exception(f'Could not find {path} module')
-        return tree[path]
+    def simple2path(cls, path:str, tree=None, ignore_prefixes = ignore_prefixes, **kwargs) -> str:
+
+        pwd = c.pwd()
+        for prefix in ignore_prefixes + [None]:
+            middle_text = ((prefix + '/') if prefix != None else '')
+            dirpath =  pwd + '/' + middle_text +  path.replace('.', '/') + '/'
+            filepath = pwd + '/' + middle_text + path.replace('.', '/')  + '.py'
+
+            if os.path.isfile(filepath):
+                return filepath
+            elif os.path.isdir(dirpath):
+                files = c.ls(dirpath)
+                python_files = [f for f in files if f.endswith('.py')]
+                assert len(python_files) >= 1, f'Expected 1 python file in {dirpath}, got {len(python_files)}'
+                for f in python_files:
+                    if f.split('/')[-1].replace('.py', '') == path.split('.')[-1]:
+                        return f
+        raise Exception(f'Could not find path dirpath: {dirpath} filepath: {filepath} in {pwd}')
     
     def path2tree(self, **kwargs) -> str:
         trees = c.trees()
@@ -41,36 +51,28 @@ class Tree(c.Module):
                 max_age = 100000, **kwargs
                 ) -> List[str]:
         
-        tree = tree or 'commune'
         module_tree = {}
         path = cls.resolve_path(f'{tree}/tree')
         max_age = 0 if update else max_age
         module_tree =  c.get(path, {}, max_age=max_age)
-
+        tree_path = c.pwd()
+        t1 = c.time()
         if len(module_tree) == 0:
-            tree2path = cls.tree2path()
-            if tree in tree2path:
-                tree_path = tree2path[tree]
-            else:
-                assert tree in tree2path, f'{tree} not in {tree2path}'
             # get modules from each tree
             python_paths = c.get_module_python_paths(path=tree_path)
             # add the modules to the module tree
-            new_tree = {c.path2simple(f, tree=tree): f for f in python_paths}
-            for k,v in new_tree.items():
-                if k not in module_tree:
-                    module_tree[k] = v
+            module_tree = {c.path2simple(f, tree=tree): f for f in python_paths}
+            # remove
             # to use functions like c. we need to replace it with module lol
-            
             if cls.root_module_class in module_tree:
                 module_tree[cls.root_module_class] = module_tree.pop(cls.root_module_class)
-            
+
             c.put(path, module_tree)
 
         # cache the module tree
         if search != None:
             module_tree = {k:v for k,v in module_tree.items() if search in k}
-
+        c.print(f'Loaded module tree in {c.time() - t1} seconds')
         return module_tree
     
     @classmethod
@@ -162,14 +164,10 @@ class Tree(c.Module):
         return tree
 
     @classmethod
-    def path2simple(cls, path:str, tree=None) -> str:
-
+    def path2simple(cls, path:str, ignore_prefixes = ignore_prefixes, tree=None) -> str:
         tree = cls.resolve_tree(tree)
-        filename = os.path.basename(path).replace('.py', '')
-
         path = os.path.abspath(path)
-        homepath = os.path.expanduser('~')
-        path = path.replace(homepath, '')
+        path = path.replace(c.pwd(), '')
         simple_path =  path.split(deepcopy(tree))[-1]
 
         if cls.path_config_exists(path):
@@ -182,46 +180,20 @@ class Tree(c.Module):
         # compress nae
         chunks = simple_path.split('.')
         simple_chunk = []
+
         for i, chunk in enumerate(chunks):
             if len(simple_chunk)>0:
-
-                if simple_chunk[-1] == chunks[i]:
+                if simple_chunk[-1] == chunk:
                     continue
                 elif any([chunks[i].endswith(s) for s in ['_module', 'module']]):
                     continue
+            if i == 0 and any([chunk.startswith(s) for s in ignore_prefixes]):
+                continue
             simple_chunk += [chunk]
-        
-        if '_' in simple_chunk[-1]:
-            filename_chunks = simple_chunk[-1].split('_')
-            # if all of the chunks are in the filename
-            if all([c in simple_chunk for c in filename_chunks]):
-                simple_chunk = simple_chunk[:-1]
 
         simple_path = '.'.join(simple_chunk)
 
-        # THE COMPRESSOR
-        # we want to remove stupid names like tree.tree -> tree or model.openai.model -> model.openai
-        if len(simple_path.split('.')) > 0:
-            simple_path_splits = simple_path.split('.')
-            new_simple_path = []
-            for p in simple_path_splits:
-                if p in simple_path:
-                    new_simple_path += [p]
-                    
 
-        if tree != None:
-            if simple_path.startswith(tree):
-                simple_path = simple_path.replace(tree, '')
-        if tree == 'commune':
-            if simple_path.startswith('modules.'):
-                simple_path = simple_path.replace('modules.', '')
-
-
-        # # if the filename is in the simple path, remove it
-        # if '_' in filename:
-        #     if filename.replace('_', '.') in simple_path:
-        #         simple_path = simple_path[:-len(filename)]
-        
         return simple_path
 
 

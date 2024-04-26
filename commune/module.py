@@ -12,7 +12,7 @@ import sys
 import argparse
 import asyncio
 from typing import Union, Dict, Optional, Any, List, Tuple
-import warnings
+import yaml
 import nest_asyncio
 nest_asyncio.apply()
 
@@ -199,32 +199,11 @@ class c:
         return inspect.getfile(cls)
 
     @classmethod
-    def module_dirpath(self) -> str:
-        return  os.path.dirname(self.module_file())
-
-    @classmethod
-    def __module_dir__(cls) -> str :
-        # get the directory of the module
-        return os.path.dirname(cls.module_file())
-    
-    @classmethod
-    def get_module_path(cls, obj=None,  simple:bool=False) -> str:
-        # odd case where the module is a module in streamlit
-        obj = cls.resolve_module(obj)
-        module_path =  inspect.getfile(obj)
-        # convert into simple
-        if simple:
-            module_path = cls.path2simple(module_path)
-        return module_path
-    
-
-    @classmethod
     def filepath(cls, obj=None) -> str:
         '''
         removes the PWD with respect to where module.py is located
         '''
-        obj = cls.resolve_module(obj)
-        module_path =  inspect.getfile(obj)
+        module_path =  inspect.getfile(obj or cls)
         return module_path
     
     @classmethod
@@ -274,9 +253,8 @@ class c:
     @classmethod
     def module_path(cls, simple:bool=True) -> str:
         # get the module path
-        
-        path = cls.get_module_path(simple=simple)
-        return path
+        filepath = cls.filepath()
+        return c.path2simple(filepath)
     
     path  = name = module_name =  module_path
     
@@ -288,26 +266,11 @@ class c:
         obj = obj if obj != None else cls
         return obj.__name__
     classname = class_name
-    @classmethod
-    def get_class_name(cls, obj = None) -> str:
-        obj = obj if obj != None else cls
-        if not cls.is_class(obj):
-            obj = type(obj)
-        return obj.__name__
-    
-
-    @classmethod
-    def minimal_config(cls) -> Dict:
-        '''
-        The miminal config a module can be
-        '''
-        minimal_config = {'module': cls.__name__}
-        return minimal_config
 
 
     @classmethod
     def config_path(cls) -> str:
-        return cls.get_module_path(simple=False).replace('.py', '.yaml')
+        return cls.filepath().replace('.py', '.yaml')
 
     @classmethod
     def dict2munch(cls, x:dict, recursive:bool=True)-> Munch:
@@ -346,7 +309,6 @@ class c:
         '''f
         Loads a yaml file
         '''
-        import yaml
         path = cls.resolve_path(path)
 
         try:
@@ -451,7 +413,7 @@ class c:
     
     @classmethod
     def config_path(cls) -> str:
-        path = cls.module_file().replace('.py', '.yaml')
+        path = cls.filepath().replace('.py', '.yaml')
         return path
     
     
@@ -466,8 +428,7 @@ class c:
         if path == None: 
             path = cls.config_path()
         else:
-            module_tree = c.tree()
-            path = module_tree[path].replace('.py', '.yaml')
+            path = c.simple2path(path).replace('.py', '.yaml')
             
         config = cls.load_yaml(path)
 
@@ -1408,10 +1369,9 @@ class c:
     @classmethod
     def path2simple(cls, 
                     path:str,
-                    tree = None,
                     ) -> str:
 
-        return c.module('tree').path2simple(path=path, tree=tree)  
+        return c.module('tree').path2simple(path=path)  
     
 
     @classmethod
@@ -1485,9 +1445,9 @@ class c:
     def path2objectpath(cls, path:str = None, tree=None) -> str:
         path = path or cls.filepath()
         tree = tree or 'commune'
-        tree_path = cls.tree2path()[tree]
-
-        if path.endswith('module/module.py'):
+        # tree_path = cls.tree2path()[tree]
+        c.print()
+        if path.endswith('commune/module.py'):
             return 'commune.Module'
         
         python_classes = cls.find_python_classes(path)
@@ -1495,7 +1455,7 @@ class c:
             return None
         
         object_name = python_classes[-1]
-        path = path.replace(tree_path+'/', '').replace('.py','.').replace('/', '.') 
+        path = path.replace(c.pwd()+'/', '').replace('.py','.').replace('/', '.') 
         path = path + object_name
         return path
 
@@ -1533,7 +1493,7 @@ class c:
                 module = c.import_object('commune.tree.Tree')
             else:
                 # convert the simple to path
-                path = c.simple2path(path, tree=tree)
+                path = c.simple2path(path)
                 object_path = c.path2objectpath(path, tree=tree)
                 module = c.import_object(object_path)
 
@@ -1649,17 +1609,7 @@ class c:
 
     @classmethod
     def simple2path(cls, path:str, **kwargs) -> str:
-        tree = c.tree(**kwargs)
-        if path not in tree:
-            shortcuts = c.shortcuts()
-            if path in shortcuts:
-                path = shortcuts[path]
-            else:
-                modules = c.modules(path)
-                raise Exception(f'Could not find {path} in {modules} modules')
-
-        return tree[path]
-    
+        return c.module('tree').simple2path(path, **kwargs)
 
     @classmethod
     def python_paths(cls, path:str = None, recursive=True, **kwargs) -> List[str]:
@@ -1735,8 +1685,6 @@ class c:
         modules = list(cls.module_tree(search).keys())
         return modules
     
-
-
 
     @classmethod
     def get_tags(cls, module, *args, **kwargs):
@@ -4568,11 +4516,8 @@ class c:
                 
     @classmethod  
     def keys(cls, search = None, ss58=False,*args, **kwargs):
-        if search == None:
-            search = cls.module_path()
-            if search == 'module':
-                search = None
         keys = c.module('key').keys(search, *args, **kwargs)
+        c.print(keys)
         if ss58:
             keys = [c.get_key_address(k) for k in keys]
         return keys
@@ -5120,6 +5065,7 @@ class c:
                network: str = 'local',
                **kwargs
                ):
+        timestamp = c.time()
         responses = []
         if tree:
             r = c.tree()
@@ -5134,8 +5080,9 @@ class c:
             responses.append(c.module('subspace').sync())
         
         c.ip(update=1)
+        latency = c.time() - timestamp
 
-        return {'success': True, 'responses': responses}
+        return {'success': True, 'responses': responses, 'latency': latency}
 
     @classmethod
     def sync(cls, *args, **kwargs):
@@ -7663,6 +7610,9 @@ class c:
     def hello(cls):
         c.print('hello')
 
+
+    ## THREAD LAND ## 
+
     thread_map = {}
     @classmethod
     def thread(cls,fn: Union['callable', str],  
@@ -7742,7 +7692,6 @@ class c:
     @classmethod
     def users(cls, *args, **kwargs):
         return c.module('user').user(*args, **kwargs)
-    
     @classmethod
     def role2users(cls, *args, **kwargs):
         return c.module('user')().role2users(*args, **kwargs)
@@ -8220,10 +8169,18 @@ class c:
     def launcher2balance(cls):
         keys = cls.launcher_keys()
         return c.get_balances(keys)
-
-        
-
     
+    def add(a=1, b=1):
+        return a + b
+    
+
+    def run_loop(self, *args, sleep = 60, **kwargs):
+        while True:
+            self.update()
+            c.sleep(sleep)
+            
+
+
 Module = c
 
 Module.run(__name__)

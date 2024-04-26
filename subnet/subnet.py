@@ -22,12 +22,6 @@ class Subnet(c.Module):
                     subnets.append(subnet)
         return subnets
     
-    def my_trees(self, search=None, **kwargs):
-        for tree in c.trees(search=search, **kwargs):
-            c.print(tree)
-            c.print(tree, 'This is the tree, it is a Munch object')
-            return tree
-
     def new_subnet(self, search=None, **kwargs):
         modules = c.modules(search=search, **kwargs)
         subnets = []
