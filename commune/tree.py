@@ -18,11 +18,11 @@ class Tree(c.Module):
     def simple2path(cls, path:str, tree=None, ignore_prefixes = ignore_prefixes, **kwargs) -> str:
 
         pwd = c.pwd()
+        c.print(f'pwd: {pwd}', path)
         for prefix in ignore_prefixes + [None]:
             middle_text = ((prefix + '/') if prefix != None else '')
             dirpath =  pwd + '/' + middle_text +  path.replace('.', '/') + '/'
             filepath = pwd + '/' + middle_text + path.replace('.', '/')  + '.py'
-
             if os.path.isfile(filepath):
                 return filepath
             elif os.path.isdir(dirpath):
@@ -31,6 +31,8 @@ class Tree(c.Module):
                 assert len(python_files) >= 1, f'Expected 1 python file in {dirpath}, got {len(python_files)}'
                 for f in python_files:
                     if f.split('/')[-1].replace('.py', '') == path.split('.')[-1]:
+                        return f
+                    if '.'.join(f.split('/')[-1].replace('.py', '').split('_')) == path:
                         return f
         raise Exception(f'Could not find path dirpath: {dirpath} filepath: {filepath} in {pwd}')
     

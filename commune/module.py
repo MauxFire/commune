@@ -2055,7 +2055,9 @@ class c:
     @classmethod
     def ls(cls, path:str = '', 
            recursive:bool = False,
-           return_full_path:bool = True):
+           return_full_path:bool = True,
+           search = None,
+           ):
         """
         provides a list of files in the path 
 
@@ -2071,6 +2073,8 @@ class c:
             ls_files = [os.path.abspath(os.path.join(path,f)) for f in ls_files]
 
         ls_files = sorted(ls_files)
+        if search != None:
+            ls_files = [f for f in ls_files if search in f]
         return ls_files
     
     @classmethod
@@ -2401,7 +2405,6 @@ class c:
         while not c.server_exists(name, network=network):
             time_waiting += sleep_interval
             c.sleep(sleep_interval)
-            logs.append(f'Waiting for {name} to start')
         return True
         
     def attributes(self):
@@ -3347,6 +3350,8 @@ class c:
 
     @classmethod
     def fn(cls, module:str, fn:str , args:list = None, kwargs:dict= None):
+
+
         module = c.module(module)
         is_self_method = bool(fn in module.self_functions())
 
@@ -5557,6 +5562,7 @@ class c:
                 module = seperator.join(fn_splits[:-1])
                 fn = fn_splits[-1]
                 # get the model
+                ic 
                 module = c.module(module)
             else:
                 module = cls

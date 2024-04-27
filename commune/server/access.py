@@ -64,8 +64,7 @@ class Access(c.Module):
         # STEP 1:  FIRST CHECK THE WHITELIST AND BLACKLIST
         state = self.state
         config = self.config
-        c.print(state.keys(), 'fam')
-        stake = state['stake'].get(address, 0)
+        stake = state.get('stake', {}).get(address, 0)
 
         # STEP 2: CHECK THE STAKE AND CONVERT TO A RATE LIMIT
         rate_limit = min((stake / config.stake2rate) + self.config.base_rate, config.max_rate) # convert the stake to a rate
