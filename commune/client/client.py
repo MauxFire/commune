@@ -177,7 +177,6 @@ class Client(c.Module):
         ):
         key = self.resolve_key(key)
         url = self.prepare_url(address, fn)
-
         # resolve the kwargs at least
         kwargs =kwargs or {}
         kwargs.update(extra_kwargs)
@@ -186,7 +185,6 @@ class Client(c.Module):
         if self.save_history:
             input = self.serializer.deserialize(request)
             path =  self.history_path+ '/' + self.key.ss58_address + '/' + self.address+ '/'+  str(input['timestamp'])
-
             output = {
                 'address': address,
                 'fn': fn,

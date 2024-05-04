@@ -11,6 +11,7 @@ class Miner(c.Module):
         
     def forward(self, a=1, b=1):
         return a + b
+    
 
     def launcher_keys(self):
         keys = c.keys()

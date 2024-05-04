@@ -360,7 +360,7 @@ class Keypair(c.Module):
         
 
     @classmethod
-    def key2address(cls, search=None, max_age=100000, update=False, **kwargs):
+    def key2address(cls, search=None, max_age=None, update=False, **kwargs):
         path = 'key2address'
         key2address = []
         key2address =  cls.get(path, key2address,max_age=max_age, update=update)

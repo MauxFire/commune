@@ -25,9 +25,7 @@ class Server(c.Module):
         save_history:bool= True,
         history_path:str = None , 
         nest_asyncio = True,
-        mnemonic = None,
         new_loop = True,
-        subnet = None,
         **kwargs
         ) -> 'Server':
 
@@ -35,8 +33,6 @@ class Server(c.Module):
             c.new_event_loop(nest_asyncio=nest_asyncio)
         self.ip = c.ip()
         port = port or c.free_port()
-        while c.port_used(port):
-            port =  c.free_port()
         self.port = port
         self.address = f"{self.ip}:{self.port}"
         self.max_request_staleness = max_request_staleness
@@ -47,11 +43,13 @@ class Server(c.Module):
         self.chunk_size = chunk_size
         self.timeout = timeout
         self.free = free
+        self.name = name
         self.serializer = c.module(serializer)()
         self.set_module(module, key=key)
         self.access_module = c.module(access_module)(module=self.module)  
         self.set_history_path(history_path)
         self.set_api(port=self.port)
+        self.name = name or self.module.server_name 
 
     def set_module(self, module, key=None):
 
@@ -63,21 +61,16 @@ class Server(c.Module):
         # Resolve the blacklist
         blacklist = self.blacklist if hasattr(self, 'blacklist') else []
 
-        self.whitelist = list(set(whitelist + c.whitelist))
-        self.blacklist = list(set(blacklist + c.blacklist))
-        self.name = module.server_name
-        self.schema = module.schema() 
-        self.module = module 
-
+        whitelist = list(set(whitelist + c.whitelist))
+        blacklist = list(set(blacklist + c.blacklist))
         module.whitelist = whitelist
         module.blacklist = blacklist
         module.ip = self.ip
         module.port = self.port
-        module.address  = self.address
-        module.network = self.network
-        module.subnet = self.subnet
-        self.key = self.module.key = c.get_key(key or self.name)
-
+        module.address  = self.address  
+        self.key = module.key = c.get_key(key or self.name)       
+        self.schema = module.schema() 
+        self.module = module 
         return {'success': True, 'msg': f'Set module {module}', 'key': self.key.ss58_address}
 
     def forward(self, fn:str, input:dict):
@@ -93,38 +86,37 @@ class Server(c.Module):
             signature: the signature of the request
    
         """
-        user_info = None
         color = c.random_color()
-
         try:
             # you can verify the input with the server key class
+
             assert self.key.verify(input), f"Data not signed with correct key"
 
+            # verify the input is signed with the correct key
             input['fn'] = fn
-
             if 'params' in input:
+                if isinstance(input['params'], str):
+                    if c.jsonable(input['params']):
+                        input['params'] = c.str2dict(input['params'])
                 if isinstance(input['params'], dict):
                     input['kwargs'] = input['params']
-                else:
+                if isinstance(input['params'], list):
                     input['args'] = input['params']
-
             if 'args' in input and 'kwargs' in input:
                 input['data'] = {'args': input['args'], 
                                  'kwargs': input['kwargs'], 
                                  'timestamp': input['timestamp'], 
                                  'address': input['address']}
-                
-            
+        
             input['data'] = self.serializer.deserialize(input['data'])
+            t0 = input['data'].get('timestamp', 0)
             # here we want to verify the data is signed with the correct key
-            request_staleness = c.timestamp() - input['data'].get('timestamp', 0)
-            # verifty the request is not too old
+            request_staleness = c.timestamp() - t0
             assert request_staleness < self.max_request_staleness, f"Request is too old, {request_staleness} > MAX_STALENESS ({self.max_request_staleness})  seconds old"
-            
             # verify the access module
-            user_info = self.access_module.verify(fn=input['fn'], address=input['address'])
-            if not user_info['success']:
-                return user_info
+            access_info = self.access_module.verify(fn=input['fn'], address=input['address'])
+            if not access_info['success']:
+                return access_info
             assert 'args' in input['data'], f"args not in input data"
 
             data = input['data']
@@ -132,65 +124,47 @@ class Server(c.Module):
             kwargs = data.get('kwargs', {})
             
             fn_obj = getattr(self.module, fn)
-            
             if callable(fn_obj):
                 result = fn_obj(*args, **kwargs)
             else:
                 result = fn_obj
-
-            if isinstance(result, dict) and 'error' in result:
-                success = False 
-            else:
-                success = True
-
             # if the result is a future, we need to wait for it to finish
         except Exception as e:
             result = c.detailed_error(e)
-            success = False 
-
-
-
 
         print_info = {
             'fn': fn,
-            'address': input['address'],
-            'latency': c.time() - input['data']['timestamp'],
-            'datetime': c.time2datetime(input['data']['timestamp']),
-            'success': success,
+            'caller': input['address'],
+            'latency': c.time() - t0,
+            'datetime': c.time2datetime(t0),
         }
-        if not success:
-            print_info['error'] = result
 
-        c.print(print_info, color=color)
+        c.print(c.df([print_info]), color=color)
         
-
         result = self.process_result(result)
-    
-        output = {
-        'module': self.name,
-        'fn': fn,
-        'address': input['address'],
-        'args': input['data']['args'],
-        'kwargs': input['data']['kwargs'],
-        }
+
         if self.save_history:
 
-            output.update(
-                {
-                    'success': success,
-                    'user': user_info,
-                    'timestamp': input['data']['timestamp'],
-                    'result': result if c.jsonable(result) else None,
-                }
-            )
+        
+            output = {
+            'fn': fn,
+            'key': input['address'],
+            'key_type': 'sr25519',
+            'input': input['data'],
+            'result': result,
+            'latency': c.time() - t0,
+            'result': result,
+            'user': access_info,
+            'timestamp': t0,
 
-            output.update(output.pop('data', {}))
-            output['latency'] = c.time() - output['timestamp']
+            }
             self.add_history(output)
 
         return result
 
-    def set_api(self, port:int = 8888):
+    def set_api(self, port=None):
+        port = port or self.port
+
         
         self.app = FastAPI()
         self.app.add_middleware(
@@ -275,7 +249,7 @@ class Server(c.Module):
 
     # HISTORY 
     def add_history(self, item:dict):    
-        path = self.history_path + '/' + item['address'] + '/'+  str(item['timestamp']) 
+        path = self.history_path + '/' + item['key'] + '/'+  str(item['timestamp']) 
         self.put(path, item)
 
     def set_history_path(self, history_path):
@@ -322,7 +296,8 @@ class Server(c.Module):
         setattr(module, 'whitelist', whitelist)
         setattr(module, 'blacklist', blacklist)
         return module
-    
+
+
 
 
 

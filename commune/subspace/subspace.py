@@ -64,9 +64,6 @@ class Subspace(c.Module):
                             'MinWeightStake',
                             'UnitEmission',
     ] 
-
-
-
     
     module_features = [
                             'key', 
@@ -3699,11 +3696,6 @@ class Subspace(c.Module):
     def clean_tx_history(self):
         return self.ls(f'tx_history')
         
-    def resolve_tx_dirpath(self, key:str=None, mode:'str([pending,complete])'='pending', network=network, **kwargs):
-        key_ss58 = self.resolve_key_ss58(key)
-        assert mode in ['pending', 'complete']
-        pending_path = f'history/{network}/{key_ss58}/{mode}'
-        return pending_path
     
     def resolve_key(self, key = None):
         if key == None:

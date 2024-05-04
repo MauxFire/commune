@@ -255,6 +255,8 @@ class PM2(c.Module):
             cls.kill(name)  
         
         cwd = cwd or module.dirpath()
+
+        c.print(command)
         
         stdout = c.cmd(command, env=env, verbose=verbose, cwd=cwd)
         return {'success':True, 'message':f'Launched {module}', 'command': command, 'stdout':stdout}
@@ -273,3 +275,6 @@ class PM2(c.Module):
             c.print(result)
             results.append(result)
         return results
+
+
+# pm2 start /Users/salvivona/commune/commune/module.py --name module --interpreter python3 -f  -- --fn module_fn --kwargs "{'module': 'module', 'fn': 'serve', 'args': [], 'kwargs': {'module': 'module', 'tag': null, 'server_network': 'local', 'port': 50221, 'server_name': null, 'name': 'module', 'refresh': true, 'remote': false, 'tag_seperator': '::', 'max_workers': null, 'free': false, 'mnemonic': null, 'key': null, 'config_keys': ['network']}}"

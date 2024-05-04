@@ -11,7 +11,6 @@ class cli(c.Module):
     def __init__(self, 
                  args = None,
                 module = 'module',
-                new_event_loop: bool = True,
                 verbose = True,
                 save: bool = True):
         self.base_module = c.module(module)
@@ -54,8 +53,8 @@ class cli(c.Module):
                 module = c.module(module)
             fn = args.pop(0)
 
-
-        if module.classify_fn(fn) == 'self':
+        fn_type = module.classify_fn(fn)
+        if fn_type == 'self':
             module = module()
             
         fn_obj = getattr(module, fn)

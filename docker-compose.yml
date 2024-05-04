@@ -8,7 +8,7 @@ services:
     container_name: commune
     shm_size: '1gb' # for the shared memory size
     volumes:
-      - ~/.commune:/config/.commune
+      - ~/.commune:/config/.commune # the docker container is odd
       - ~/.commune:/root/.commune
       - ./:/commune
       - /var/run/docker.sock:/var/run/docker.sock #Nuclear option

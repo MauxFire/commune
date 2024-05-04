@@ -8,9 +8,10 @@ class Test(c.Module):
     def test_basics(cls) -> dict:
         servers = c.servers()
         c.print(servers)
-        tag = 'test'
-        module_name = c.serve(module='module', tag=tag)['name']
+        module_name = 'module::test'
+        c.serve(module_name)
         c.wait_for_server(module_name)
+        c.print(module_name)
         assert module_name in c.servers()
         c.kill(module_name)
         assert module_name not in c.servers()
