@@ -36,7 +36,7 @@ nest_asyncio = "*"
 aiohttp = "*" 
 netaddr = "*"
 
-# SERVER
+
 
 fastapi = "*"
 sse-starlette = "*"# server sent events for streaming back to client
