@@ -1282,7 +1282,6 @@ class Subspace( SubspaceSubnet, SubspaceWallet, c.Module):
         future2name = {}
         name2feature = dict(zip(names, features))
         for name, feature in name2feature.items():
-            c.print(f'Getting {name} for {feature}')
             query_kwargs = dict(name=feature, params=[], block=None, max_age=max_age, update=update)
             f = c.submit(self.query, kwargs=query_kwargs, timeout=timeout)
             future2name[f] = name
