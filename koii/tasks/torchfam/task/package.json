@@ -1,0 +1,18 @@
+json
+{
+  "name": "ml-task",
+  "version": "1.0.0",
+  "description": "Machine Learning task using TensorFlow.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "@_koii/namespace-wrapper": "^1.0.0",
+    "@tensorflow/tfjs": "^3.18.0",
+    "@tensorflow/tfjs-node": "^3.18.0"
+  },
+  "devDependencies": {
+    "jest": "^27.0.6"
+  }
+}
