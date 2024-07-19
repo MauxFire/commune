@@ -30,7 +30,7 @@ class ThreadPoolExecutor(c.Module):
     def __init__(
         self,
         max_workers: int =None,
-        maxsize : int = None ,
+        maxsize : int = 10000 ,
         thread_name_prefix : str ="",
     ):
         """Initializes a new ThreadPoolExecutor instance.
@@ -41,8 +41,8 @@ class ThreadPoolExecutor(c.Module):
         """
         self.start_time = c.time()
 
-        max_workers = (os.cpu_count() or 1) * 5 if max_workers == None else max_workers
-        maxsize = max_workers * 10 or None
+        max_workers = (os.cpu_count() or 1) * 10 if max_workers == None else max_workers
+        maxsize = maxsize or max_workers * 10
         if max_workers <= 0:
             raise ValueError("max_workers must be greater than 0")
             

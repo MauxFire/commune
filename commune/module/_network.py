@@ -477,6 +477,10 @@ class Network:
         return cls.get_port_range(port_range)
 
     
+    @classmethod
+    def set_ip(cls, ip):
+        cls.put('ip', ip)
+        return ip
 
     @classmethod
     def set_port_range(cls, *port_range: list):
@@ -564,7 +568,7 @@ class Network:
     available_ports = get_available_ports
     
     @classmethod
-    def ip(cls,  max_age=10000, update:bool = False, **kwargs) -> str:
+    def ip(cls,  max_age=None, update:bool = False, **kwargs) -> str:
         ip = cls.get('ip', None, max_age=max_age, update=update)
         if ip == None:
             ip =  cls.external_ip(**kwargs)

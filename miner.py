@@ -7,10 +7,10 @@ class Miner(c.Module):
     
     def __init__(self, 
                 netuid = 3, 
-                n = 42, 
+                n = 40, 
                 key : str =None, 
                 treasury_key_address:str = None,
-                stake=1, 
+                stake=10, 
                 miner_key_prefix = 'miner_', 
                 max_age=600, 
                 update=False
@@ -79,7 +79,6 @@ class Miner(c.Module):
         if controller_key == None:
             controller_key = self.key.ss58_address
 
-            
         port = c.free_port()
         keys = self.keys()
         while port in self.used_ports:
@@ -140,7 +139,7 @@ class Miner(c.Module):
         keys = self.keys()
         futures = []
         for i, key in enumerate(keys):
-            future = c.submit(self.register_miner, kwargs={'key': key})
+            future = c.submit(self.register_miner, kwargs={'key': key, 'controller_key': key})
             futures += [future]
         for f in c.as_completed(futures, timeout=timeout):
             print(f.result())

@@ -10,8 +10,11 @@ pytest
 munch
 nest_asyncio
 asyncio
+aiohttp
 aiofiles
 retry
 netaddr
+loguru
+tqdm
 
 

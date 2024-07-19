@@ -9,8 +9,6 @@ from copy import deepcopy
 import commune as c
 import json
 
-
-
 class Serializer(c.Module):
 
     def serialize(self,x:dict, mode = 'str', copy_value = True):
@@ -63,6 +61,7 @@ class Serializer(c.Module):
                              'data_type': str_v_type,  
                              'serialized': True}
             else:
+                c.print(f"ERROR IN SERIALIZATION: Type {str_v_type} not supported" , color='red') 
                 new_value = {"success": False, "error": f"Type {str_v_type} not supported"}
 
         return new_value
@@ -190,10 +189,6 @@ class Serializer(c.Module):
     def str2hex(cls, x, **kwargs):
         return bytes.fromhex(x)
 
-    str2bytes = str2hex
-        
-
-
     def bytes2dict(self, data:bytes) -> dict:
         import msgpack
         json_object_bytes = msgpack.unpackb(data)
@@ -234,7 +229,6 @@ class Serializer(c.Module):
         output = msgpack.unpackb(data, object_hook=msgpack_numpy.decode)
         return output
 
-    
     def deserialize_torch(self, data: dict) -> 'torch.Tensor':
         from safetensors.torch import load
         if isinstance(data, str):
@@ -247,14 +241,6 @@ class Serializer(c.Module):
         output = save({'data':data})  
         return self.bytes2str(output)
 
-    def serialize_numpy(self, data: 'np.ndarray') -> 'np.ndarray':     
-        data =  self.numpy2bytes(data)
-        return self.bytes2str(data)
-
-    def deserialize_numpy(self, data: bytes) -> 'np.ndarray':     
-        if isinstance(data, str):
-            data = self.str2bytes(data)
-        return self.bytes2numpy(data)
 
     def get_type_str(self, data):
         '''
@@ -294,4 +280,3 @@ class Serializer(c.Module):
         if  'DataFrame' in data_type:
             data_type = 'pandas'
         return data_type
-
