@@ -566,6 +566,13 @@ class Network:
                   
         return available_ports
     available_ports = get_available_ports
+
+
+    @classmethod
+    def set_ip(cls, ip):
+        
+        cls.put('ip', ip)
+        return ip
     
     @classmethod
     def ip(cls,  max_age=None, update:bool = False, **kwargs) -> str:

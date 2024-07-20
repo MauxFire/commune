@@ -1,14 +1,15 @@
-
-
-
-
 CONTAINER=commune
-SCRIPTS_PATH=./${CONTAINER}/scripts
+SCRIPTS_PATH=./commune/scripts
+
+# include the arguments following this
 build:
-	${SCRIPTS_PATH}/build.sh
+	${SCRIPTS_PATH}/build.sh 
 start:
-	${SCRIPTS_PATH}/start.sh
-restart:
+	${SCRIPTS_PATH}/start.sh 
+up: 
+	make start
+	
+restart: 
 	docker restart ${CONTAINER}
 down:
 	docker kill ${CONTAINER} ; docker rm ${CONTAINER}
@@ -18,6 +19,7 @@ enter:
 	docker exec -it ${CONTAINER} bash
 tests: 
 	docker exec ${CONTAINER} bash -c "pytest commune/tests"
+	
 install_venv:
 	./commune/scripts/install_python_venv.sh
 enter_env: 
@@ -27,3 +29,9 @@ create_env:
 
 chmod_scripts:
 	chmod +x ${SCRIPTS_PATH}/*.sh
+
+app:
+	docker exec ${CONTAINER} c app arena.app
+
+apps:
+	docker exec ${CONTAINER} c app/apps

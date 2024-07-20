@@ -109,6 +109,7 @@ class Tree:
                 save = True,
                 **kwargs
                 ) -> List[str]:
+        import commune as c
         tree = {}
         mode = None
         timestamp = cls.time()
@@ -129,7 +130,7 @@ class Tree:
 
         if len(tree) == 0:
             # if the tree is not cached in memory or we want to check the storage cache
-            tree =  cls.get(cache_path, {}, max_age=max_age, update=update)
+            tree =  c.get(cache_path, {}, max_age=max_age, update=update)
             mode = 'storage_cache'
             if len(tree) == 0 :
                 # if the tree is not in the storage cache, we want to build it and store it
@@ -137,7 +138,7 @@ class Tree:
                 tree = cls.build_tree(path)
                 cls.tree_cache[cache_path] = {'data': tree, 'timestamp': timestamp}
                 if save: # we want to save the tree to storage
-                    cls.put(cache_path, tree)
+                    c.put(cache_path, tree)
         
         assert mode != None, 'Invalid mode'
         if search != None:
