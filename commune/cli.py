@@ -76,9 +76,12 @@ class cli:
         """
         the cli works as follows 
         c {module}/{fn} arg1 arg2 arg3 ... argn
-        if you are calling a function ont he module function (the root module), it is not necessary to specify the module
+        if you are calling a function on the module function (the root module), it is not necessary to specify the module
         c {fn} arg1 arg2 arg3 ... argn
         """
+        if not isinstance(argv, list) or len(argv) == 0:
+            raise ValueError('Invalid arguments. Command should be in the format c {module}/{fn} arg0, arg1 ...')
+        print(argv)
         init_kwargs = {}
         if argv[0].endswith('.py'):
             argv[0] = argv[0][:-3]
